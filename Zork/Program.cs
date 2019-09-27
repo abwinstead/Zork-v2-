@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Zork
 {
@@ -13,11 +15,21 @@ namespace Zork
                 return Rooms[Location.Row, Location.Column];
             }
         }
+        private static readonly Dictionary<string, Room> roomMap;
 
+        static Program()
+        {
+            roomMap = new Dictionary<string, Room>();
+            foreach (Room room in Rooms)
+            {
+                roomMap[room.Name] = room;
+            }
+        }
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Zork!");
-            InitializeRoomDescriptions();
+            string roomsFilename = "Rooms.txt";
+            InitializeRoomDescriptions(roomsFilename);
 
             Room previousRoom = null;
             Commands command = Commands.UNKNOWN;
@@ -101,12 +113,21 @@ namespace Zork
         private static Commands ToCommand(string commandString) => Enum.TryParse(commandString, true, out Commands result) ? result : Commands.UNKNOWN;
         private static bool IsDirection(Commands command) => Directions.Contains(command);
 
-        private static void InitializeRoomDescriptions()
+        private static void InitializeRoomDescriptions(string roomsFilename)
         {
-            var roomMap = new Dictionary<string, Room>();
-            foreach (Room room in Rooms)
+
+            const string fieldDelimiter = "##";
+            const int expectedFieldCount = 2;
+            var roomQuery = from line in File.ReadLines(roomsFilename)
+                            let fields = line.Split(fieldDelimiter)
+                            where fields.Length == expectedFieldCount
+                            select (Name: fields[(int)Fields.Name],
+                                    Description: fields[(int)Fields.Description]);
+
+            foreach (var (Name, Description) in roomQuery)
+   
             {
-                roomMap[room.Name] = room;
+                roomMap[Name].Description = Description;
             }
 
             roomMap["Rocky Trail"].Description = "You are on a rock-strewn trail.";                                                                                     
@@ -138,6 +159,12 @@ namespace Zork
         };
 
         private static (int Row, int Column) Location = (1, 1);
+
+        private enum Fields
+        {
+            Name = 0,
+            Description
+        }
     }
 
 }
