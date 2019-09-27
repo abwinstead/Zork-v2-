@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,11 +29,11 @@ namespace Zork
 
         static void Main(string[] args)
         {
-            const string defaultRoomsFilename = "Rooms.txt";
+            const string defaultRoomsFilename = "Rooms.json";
             string roomsFilename = (args.Length > 0 ? args[(int)CommandLineArguments.RoomsFilename] : defaultRoomsFilename);                //allow the user to specify a filename to read from with code
 
             Console.WriteLine("Welcome to Zork!");
-            InitializeRoomDescriptions(roomsFilename);
+            InitializeRooms(roomsFilename);
 
             Room previousRoom = null;
             Commands command = Commands.UNKNOWN;
@@ -116,28 +117,10 @@ namespace Zork
         private static Commands ToCommand(string commandString) => Enum.TryParse(commandString, true, out Commands result) ? result : Commands.UNKNOWN;
         private static bool IsDirection(Commands command) => Directions.Contains(command);
 
-        private static void InitializeRoomDescriptions(string roomsFilename)
-        {
+        private static void InitializeRooms(string roomsFilename) =>
+            Rooms = JsonConvert.DeserializeObject<Room[,]>(File.ReadAllText(roomsFilename));
 
-            const string fieldDelimiter = "##";
-            const int expectedFieldCount = 2;
-            var roomQuery = from line in File.ReadLines(roomsFilename)
-                            let fields = line.Split(fieldDelimiter)
-                            where fields.Length == expectedFieldCount
-                            select (Name: fields[(int)Fields.Name],
-                                    Description: fields[(int)Fields.Description]);
-
-            foreach (var (Name, Description) in roomQuery)
-   
-            {
-                roomMap[Name].Description = Description;
-            }
-
-                                     
-        }
-
-
-        private static readonly Room[,] Rooms =
+        private static Room[,] Rooms =
          {
             { new Room("Rocky Trail"), new Room("South of House"), new Room("Canyon View") },
             { new Room("Forest"), new Room("West of House"), new Room("Behind House") },
