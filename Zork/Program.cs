@@ -5,17 +5,22 @@ namespace Zork
 {
     class Program
     {
-        private static string[] Rooms = { "Forest", "West of House", "Behind House", "Clearing", "Canyon View" };
-        private static int i = 1;
-
+        private static (int row, int column) Location;
+        private static readonly string[,] Rooms = {
+            { "Rocky Trail","South of House", "Canyon View" },
+            {"Forest","West of House","Behind House" },
+            {"Dense Woods", "North of House", "Clearing" }
+        };
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Zork!");
+            Location.row = 1;
+            Location.column = 1;
 
             Commands command = Commands.UNKNOWN;
             while (command != Commands.QUIT)
             {
-                Console.Write(Rooms[i]);
+                Console.WriteLine(Rooms[Location.row, Location.column]);
                 Console.Write(">");
                 command = ToCommand(Console.ReadLine().Trim());
 
@@ -31,37 +36,17 @@ namespace Zork
                         break;
 
                     case Commands.NORTH:
-                        if (Move(command) == false)
-                        {
-                            outputString = "The way is shut!";
-                        }
-                        break;
+
                     case Commands.SOUTH:
-                        if (Move(command) == false)
-                        {
-                            outputString = "The way is shut!";
-                        }
-                        break;
+
                     case Commands.EAST:
-                        if (i + 1 < Rooms.Length)
-                        {
-                            outputString = $"You moved {command}.";
-                            i++;
-                        }
-                        else
-                        {
-                            outputString = $"The way is shut!";
-                        }
-                        break;
+        
                     case Commands.WEST:
-                        if (i - 1 >= 0)
+
+                        if (Move(command) == false)
+
                         {
-                            outputString = $"You moved {command}.";
-                            i--;
-                        }
-                        else
-                        {
-                            outputString = $"The way is shut!";
+                            Console.WriteLine("The way is shut!");
                         }
                         break;
 
@@ -80,14 +65,35 @@ namespace Zork
         {
             bool isValid = true;
 
-            if (command == Commands.NORTH || command == Commands.SOUTH)
+            if (command == Commands.NORTH || command == Commands.SOUTH || command == Commands.EAST || command == Commands.WEST)
             {
-                isValid = false;
+                switch (command)
+                {
+                    case Commands.NORTH when Location.row > 0:
+                        Location.row--;
+                        break;
+
+                    case Commands.SOUTH when Location.row + 1 < Rooms.GetLength(0):
+                        Location.row++;
+                        break;
+
+                    case Commands.EAST when Location.column + 1 < Rooms.GetLength(1):
+                        Location.column++;
+                        break;
+
+                    case Commands.WEST when Location.column > 0:
+                        Location.column--;
+                        break;
+
+                    default:
+                        isValid = false;
+                        break;
+                }
             }
 
             return isValid;
-
         }
 
-    }
+        };
+
 }
